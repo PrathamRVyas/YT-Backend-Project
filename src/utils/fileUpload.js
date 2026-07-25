@@ -1,30 +1,39 @@
-import {v2 as cloudinary} from 'cloudinary'
-import fs from "fs"
+import dotenv from "dotenv";
 
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET
+dotenv.config();
+
+import ImageKit from "imagekit";
+import fs from "fs";
+
+const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
-const uploadOnCloudinary = async () => (localFilePath) => {
+const uploadOnImageKit = async (localFilePath) => {
+    try {
+        if (!localFilePath) return null;
 
-    try{
-        if(!localFilePath) return null
-        //uploading file on cloudinary
-        const response = cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        //file has been uploaded successfull
-        // console.log("File is uploaded on cloudinary", response.url);
-        fs.unlinkSync(localFilePath)
+        const response = await imagekit.upload({
+            file: fs.readFileSync(localFilePath),
+            fileName: `${Date.now()}-${localFilePath.split(/[\\/]/).pop()}`
+        });
+
+        console.log("ImageKit Upload Success:", response);
+
+        fs.unlinkSync(localFilePath);
+
         return response;
+    } catch (error) {
+        console.error("ImageKit Error:", error);
 
-    }catch (error) {
-        fs.unlinkSync(localFilePath) //remove the locally saved temporary file as the upload operation got failed
+        if (localFilePath && fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
+
         return null;
     }
-}
+};
 
-
-export {uploadOnCloudinary}
+export { uploadOnImageKit };

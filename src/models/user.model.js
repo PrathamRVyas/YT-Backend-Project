@@ -27,13 +27,12 @@ const userSchema = new mongoose.Schema({
         index: true
      },
       avatar: {
-        type: String,      //cloudinary url will be saved here
-        required: true
-     },
+        type: String,
+        required: true,
+      },
       coverImage: {
         type: String,
       },
-
       watchHistory: [{
         
         type: mongoose.Schema.Types.ObjectId,
@@ -58,12 +57,11 @@ const userSchema = new mongoose.Schema({
 
 )
 
-userSchema.pre("save", async function (next) {        //Encrypting password if modified before saving (bcrypt.hash)
+userSchema.pre("save", async function () {        //Encrypting password if modified before saving (bcrypt.hash)
     if(!this.isModified("password")) return next();
 
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
-})
+    this.password = await bcrypt.hash(this.password, 10);
+});
 
 userSchema.methods.isPasswordCorrect = async function    //Checking password if it matches with the hashed one (bcrypt.compare)
 (password){
@@ -96,8 +94,5 @@ userSchema.methods.generateRefreshToken = async function(){    //Returns generat
     }
   )
 }
-
-
-userSchema.methods.generateRefreshToken = async function(){}
 
 export const User = mongoose.model("User", userSchema)
